@@ -3,7 +3,7 @@ package core
 import (
 	"sync"
 
-	"github.com/go-redis/redis"
+	redis "github.com/go-redis/redis"
 	"github.com/pontiyaraja/AB/ablog"
 )
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pontiyaraja/AB/core"
+	"github.com/pontiyaraja/AB/product/core"
 )
 
 func getProduct(w http.ResponseWriter, req *http.Request) {

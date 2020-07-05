@@ -3,7 +3,7 @@ package product
 import (
 	"net/http"
 
-	"github.com/pontiyaraja/AB/core"
+	"github.com/pontiyaraja/AB/product/core"
 )
 
 func Start() {

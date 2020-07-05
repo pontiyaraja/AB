@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/pontiyaraja/AB/core"
+	"github.com/pontiyaraja/AB/product/core"
 )
 
 func getProductData(productID string) (*Product, error) {
