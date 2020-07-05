@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -69,11 +70,12 @@ func loadRedisOptions(address, password string, db int) *redis.Options {
 
 //Ping is to ping a connection
 func Ping() {
+	ctx := context.Background()
 	redisClient, connectionError := connectionList.getConnection()
 	if connectionError != nil {
 		return
 	}
-	pong, err := redisClient.Ping().Result()
+	pong, err := redisClient.Ping(ctx).Result()
 	fmt.Println(pong, err)
 
 }
@@ -84,7 +86,8 @@ func Set(key string, value string) error {
 	if connectionError != nil {
 		return connectionError
 	}
-	err := redisClient.Set(key, value, 0).Err()
+	ctx := context.Background()
+	err := redisClient.Set(ctx, key, value, 0).Err()
 	return err
 }
 
@@ -94,7 +97,8 @@ func SetEx(key string, value string, expireSec int64) error {
 	if connectionError != nil {
 		return nil
 	}
-	err := redisClient.SetNX(key, value, time.Duration(expireSec)*time.Second)
+	ctx := context.Background()
+	err := redisClient.SetNX(ctx, key, value, time.Duration(expireSec)*time.Second)
 	return err.Err()
 }
 
@@ -104,7 +108,9 @@ func Get(key string) (string, error) {
 	if connectionError != nil {
 		return "", connectionError
 	}
-	r := redisClient.Get(key)
+
+	ctx := context.Background()
+	r := redisClient.Get(ctx, key)
 	d, e := r.Result()
 	return d, e
 }
@@ -115,29 +121,9 @@ func RPush(listName string, serializedObj string) error {
 	if connectionError != nil {
 		return connectionError
 	}
-	e := redisClient.LPush(listName, serializedObj)
+	ctx := context.Background()
+	e := redisClient.LPush(ctx, listName, serializedObj)
 	return e.Err()
-}
-
-// SAdd adds a serialized object to given key
-func SAdd(key string, serializedObj string) error {
-	redisClient, connectionError := connectionList.getConnection()
-	if connectionError != nil {
-		return connectionError
-	}
-	e := redisClient.SAdd(key, serializedObj)
-	return e.Err()
-}
-
-// SMembers returns all the members of a set
-func SMembers(key string) ([]string, error) {
-	redisClient, connectionError := connectionList.getConnection()
-	if connectionError != nil {
-		return []string{}, connectionError
-	}
-	s := redisClient.SMembers(key)
-	d, _ := s.Result()
-	return d, s.Err()
 }
 
 // Del is to delete a key value from the cache
@@ -146,26 +132,9 @@ func Del(key string) error {
 	if connectionError != nil {
 		return connectionError
 	}
-	s := redisClient.Del(key)
+	ctx := context.Background()
+	s := redisClient.Del(ctx, key)
 	return s.Err()
-}
-
-//Publish publishes a message to a channel
-func Publish(channel, message string) error {
-	redisClient, connectionError := connectionList.getConnection()
-	if connectionError != nil {
-		return connectionError
-	}
-	return redisClient.Publish(channel, message).Err()
-}
-
-//SubcribeChannel subscribe to a channel and get notified when a value for a key is changed
-func SubcribeChannel(channel string) (*redis.PubSub, error) {
-	redisClient, connectionError := connectionList.getConnection()
-	if connectionError != nil {
-		return nil, connectionError
-	}
-	return redisClient.Subscribe(channel)
 }
 
 // Expire is to set an expiry to a key
@@ -174,7 +143,8 @@ func Expire(key string, expiration int64) error {
 	if connectionError != nil {
 		return connectionError
 	}
-	return redisClient.Expire(key, time.Duration(expiration)*time.Second).Err()
+	ctx := context.Background()
+	return redisClient.Expire(ctx, key, time.Duration(expiration)*time.Second).Err()
 }
 
 /*-------------------------- HASH MAP -----------------------*/
@@ -185,7 +155,8 @@ func HDel(key string, fields ...string) error {
 	if connectionError != nil {
 		return connectionError
 	}
-	s := redisClient.HDel(key, fields...)
+	ctx := context.Background()
+	s := redisClient.HDel(ctx, key, fields...)
 	return s.Err()
 }
 
@@ -195,7 +166,8 @@ func HMset(key string, fields map[string]string) error {
 	if connectionError != nil {
 		return connectionError
 	}
-	s := redisClient.HMSet(key, fields)
+	ctx := context.Background()
+	s := redisClient.HMSet(ctx, key, fields)
 	return s.Err()
 }
 
@@ -205,7 +177,8 @@ func HSet(key, field string, value string) error {
 	if connectionError != nil {
 		return connectionError
 	}
-	s := redisClient.HSet(key, field, value)
+	ctx := context.Background()
+	s := redisClient.HSet(ctx, key, field, value)
 	return s.Err()
 }
 
@@ -215,7 +188,8 @@ func HGet(key, field string) (string, error) {
 	if connectionError != nil {
 		return "", connectionError
 	}
-	s := redisClient.HGet(key, field)
+	ctx := context.Background()
+	s := redisClient.HGet(ctx, key, field)
 	return s.Result()
 }
 
@@ -225,7 +199,8 @@ func HgetAll(key string) (map[string]string, error) {
 	if connectionError != nil {
 		return nil, connectionError
 	}
-	return redisClient.HGetAll(key).Result()
+	ctx := context.Background()
+	return redisClient.HGetAll(ctx, key).Result()
 }
 
 // HExists - checks if key exits in a hashmap
@@ -234,7 +209,8 @@ func HExists(key, field string) bool {
 	if connectionError != nil {
 		return false
 	}
-	return redisClient.HExists(key, field).Val()
+	ctx := context.Background()
+	return redisClient.HExists(ctx, key, field).Val()
 }
 
 // HIncrBy - Increments the value of a key by the given incr
@@ -243,7 +219,8 @@ func HIncrBy(key, field string, incr int64) int64 {
 	if connectionError != nil {
 		return 0 // Todo find a better method for returing value
 	}
-	return redisClient.HIncrBy(key, field, incr).Val()
+	ctx := context.Background()
+	return redisClient.HIncrBy(ctx, key, field, incr).Val()
 }
 
 //TTL - time to live value for a key
@@ -252,7 +229,8 @@ func TTL(key string) (time.Duration, error) {
 	if connectionError != nil {
 		return 0, connectionError
 	}
-	r := redisClient.TTL(key)
+	ctx := context.Background()
+	r := redisClient.TTL(ctx, key)
 	d, e := r.Result()
 	return d, e
 }
